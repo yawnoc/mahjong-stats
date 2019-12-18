@@ -1,18 +1,18 @@
 #!/usr/bin/python
 
 ################################################################
-# mahjong-stats.py
+# mahjong.py
 ################################################################
 # Parse the Mahjong scores in {scores file}.txt and return a CSV of statistics
 # for full responsibility (全銃), one-n-two bucks (一二文), and half-spicy
 # increase (半辣上) under Kwong-tung (廣東牌) scoring:
-#   mahjong-stats.py {scores file}
+#   mahjong.py {scores file}
 # Optional argument -m or --max for maximum number of faan (番) (default 8):
-#   mahjong-stats.py {...} -m {max faan}
+#   mahjong.py {...} -m {max faan}
 # Optional argument -s or --start for start date (default 0):
-#   mahjong-stats.py {...} -s {start date}
+#   mahjong.py {...} -s {start date}
 # Optional argument -e or --end for end date (default 10 ** 8):
-#   mahjong-stats.py {...} -e {end date}
+#   mahjong.py {...} -e {end date}
 # Released into the public domain (CC0):
 #   https://creativecommons.org/publicdomain/zero/1.0/
 # ABSOLUTELY NO WARRANTY, i.e. "GOD SAVE YOU"
