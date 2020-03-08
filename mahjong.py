@@ -13,6 +13,8 @@
 #   mahjong.py {...} -s {start date}
 # Optional argument -e or --end for end date (default 10 ** 8):
 #   mahjong.py {...} -e {end date}
+# Optional flag --3p for 3-player scoring:
+#   mahjong.py {...} --3p
 # Released into the public domain (CC0):
 #   https://creativecommons.org/publicdomain/zero/1.0/
 # ABSOLUTELY NO WARRANTY, i.e. "GOD SAVE YOU"
@@ -163,7 +165,7 @@ def list_to_csv_line(list_):
 # Generate dictionary of statistics from plain-text file of Mahjong scores
 ################################################################
 
-def file_to_dict(file_name, max_faan, start_date, end_date):
+def file_to_dict(file_name, max_faan, start_date, end_date, num_players):
   
   ################################################################
   # For raising exceptions
@@ -181,7 +183,7 @@ def file_to_dict(file_name, max_faan, start_date, end_date):
   space_pattern = r'\s+'
   names_re = re.compile(
     '^'
-    + 3 * (name_pattern + space_pattern)
+    + (num_players - 1) * (name_pattern + space_pattern)
     + name_pattern
     + '$'
   )
@@ -194,7 +196,7 @@ def file_to_dict(file_name, max_faan, start_date, end_date):
   space_pattern = r'\s+'
   game_re = re.compile(
     '^'
-    + 3 * (spec_pattern + space_pattern)
+    + (num_players - 1) * (spec_pattern + space_pattern)
     + spec_pattern
     + '$'
   )
@@ -211,32 +213,33 @@ def file_to_dict(file_name, max_faan, start_date, end_date):
   # Parse a list of scoring specifications into win and net score lists
   ################################################################
   
-  def parse_spec_list(spec_list):
+  def parse_spec_list(spec_list, num_players):
     
     hyphen_count = spec_list.count('-')
     is_integer_list = [spec.isdigit() for spec in spec_list]
     integer_count = is_integer_list.count(True)
     
     # Default to no change to additive statistics (except games played)
-    win_list = 4 * [0]
-    net_score_list = 4 * [0]
+    win_list = num_players * [0]
+    net_score_list = num_players * [0]
     
     # Draw (摸和)
-    if hyphen_count == 4:
+    if hyphen_count == num_players:
       
       # No changes
       return [win_list, net_score_list]
     
-    if hyphen_count == 3:
+    if hyphen_count == num_players - 1:
       
       # False win (詐糊)
       if spec_list.count('f') == 1:
         
-        # False-winning player pays 2x max base amount to each other player
+        # False-winning player pays 2x max base amount
+        # to each of the (N - 1) other players
         false_index = spec_list.index('f')
-        for n in range(4):
+        for n in range(num_players):
           if n == false_index:
-            net_score_list[n] = -6 * base_amount(max_faan)
+            net_score_list[n] = -2 * (num_players - 1) * base_amount(max_faan)
           else:
             net_score_list[n] = 2 * base_amount(max_faan)
         return [win_list, net_score_list]
@@ -244,41 +247,59 @@ def file_to_dict(file_name, max_faan, start_date, end_date):
       # Self-drawn win (自摸)
       if integer_count == 1:
         
-        # Winning player receives 2x winning base amount from each other player
+        # Winning player receives 2x winning base amount
+        # from each of the (N - 1) other players
         winner_index = is_integer_list.index(True)
         win_list[winner_index] = 1
         winning_faan = cap_faan(spec_list[winner_index])
-        for n in range(4):
+        for n in range(num_players):
           if n == winner_index:
-            net_score_list[n] = 6 * base_amount(winning_faan)
+            net_score_list[n] = (
+              2 * (num_players - 1) * base_amount(winning_faan)
+            )
           else:
-            net_score_list[n] = -2 * base_amount(winning_faan)
+            net_score_list[n] = (
+              -2 * base_amount(winning_faan)
+            )
         return [win_list, net_score_list]
     
-    if hyphen_count == 2:
+    if hyphen_count == num_players - 2:
       
       # Discarded win (打出)
       if integer_count == 1 and spec_list.count('d') == 1:
         
-        # Winning player receives 4x winning base amount from discarding player
+        # Winning player receives (2 + (N - 2))x == Nx winning base amount
+        # from discarding player
+        #   2     : 1 double-portion for the discarding player
+        #   N - 2 : N - 2 single-portions on behalf of the bystanders (閒家)
+        #           (since scoring is full responsibility (全銃))
         winner_index = is_integer_list.index(True)
         win_list[winner_index] = 1
         winning_faan = cap_faan(spec_list[winner_index])
         discarding_index = spec_list.index('d')
-        net_score_list[winner_index] = 4 * base_amount(winning_faan)
-        net_score_list[discarding_index] = -4 * base_amount(winning_faan)
+        net_score_list[winner_index] = (
+          num_players * base_amount(winning_faan)
+        )
+        net_score_list[discarding_index] = (
+          -num_players * base_amount(winning_faan)
+        )
         return [win_list, net_score_list]
       
       # Taking on all losses for a self-drawn win (包自摸)
       if integer_count == 1 and spec_list.count('t') == 1:
         
-        # Winning player receives 6x winning base amount from taking-on player
+        # Winning player receives 2(N - 1)x winning base amount
+        # from taking-on player
         winner_index = is_integer_list.index(True)
         win_list[winner_index] = 1
         winning_faan = cap_faan(spec_list[winner_index])
         taking_on_index = spec_list.index('t')
-        net_score_list[winner_index] = 6 * base_amount(winning_faan)
-        net_score_list[taking_on_index] = -6 * base_amount(winning_faan)
+        net_score_list[winner_index] = (
+          2 * (num_players - 1) * base_amount(winning_faan)
+        )
+        net_score_list[taking_on_index] = (
+          -2 * (num_players - 1) * base_amount(winning_faan)
+        )
         return [win_list, net_score_list]
       
       # Otherwise the line is invalid
@@ -330,7 +351,7 @@ def file_to_dict(file_name, max_faan, start_date, end_date):
       if names_match:
         
         # Set list of players
-        player_list = [names_match.group(n) for n in range(1, 5)]
+        player_list = [names_match.group(n) for n in range(1, 1 + num_players)]
         
         # Check for duplicate players
         if len(player_list) != len(set(player_list)):
@@ -352,10 +373,10 @@ def file_to_dict(file_name, max_faan, start_date, end_date):
           raise_exception('players must be specified before a game')
         
         # Extract list of scoring specifications
-        spec_list = [game_match.group(n) for n in range(1, 5)]
+        spec_list = [game_match.group(n) for n in range(1, 1 + num_players)]
         
         # Parse into win and net (zero-sum) score lists
-        win_list, net_score_list = parse_spec_list(spec_list)
+        win_list, net_score_list = parse_spec_list(spec_list, num_players)
         
         # Update players' games played, games won and net scores
         for n, player in enumerate(player_list):
@@ -404,8 +425,20 @@ def main(args):
   if end_date != DEFAULT_END_DATE:
     file_name_export += f'-e_{end_date}'
   
+  # Number of players
+  three_player = args.three_player
+  if three_player:
+    num_players = 3
+  else:
+    num_players = 4
+  
   # Generate dictionary of statistics from file
-  stats_dict = file_to_dict(file_name, max_faan, start_date, end_date)
+  stats_dict = file_to_dict(
+    file_name,
+    max_faan,
+    start_date, end_date,
+    num_players
+  )
   
   # Convert into CSV string of statistics
   stats_csv = dict_to_csv(stats_dict)
@@ -456,6 +489,12 @@ if __name__ == '__main__':
     nargs = '?',
     default = DEFAULT_END_DATE,
     type = int
+  )
+  parser.add_argument(
+    '--3p',
+    dest = 'three_player',
+    action = 'store_true',
+    help = 'Flag for 3-player scoring'
   )
   
   # Run
