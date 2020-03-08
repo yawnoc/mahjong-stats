@@ -22,6 +22,10 @@ increase (半辣上) under Kwong-tung (廣東牌) scoring:
 
     mahjong.py {...} -e {end date}
 
+### Optional flag `--3p` for 3-player scoring:
+
+    mahjong.py {...} --3p
+
 ## Specifications for scores text file
 
 1. Hash (`#`) **comments** out the remainder of a line
@@ -42,6 +46,8 @@ increase (半辣上) under Kwong-tung (廣東牌) scoring:
       4. `f`, for a false win (詐糊)
       5. `-`, otherwise
 5. Any other non-comment non-whitespace text is invalid
+
+Omit `{P4}` and `{S4}` for 3-player scoring.
 
 ## Simple example
 
