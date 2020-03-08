@@ -8,7 +8,7 @@ Parse the Mahjong scores in `{scores file}.txt` and return a CSV of statistics
 for full responsibility (全銃), one-n-two bucks (一二文), and half-spicy
 increase (半辣上) under Kwong-tung (廣東牌) scoring:
 
-    mahjong.py {scores file}
+    mahjong.py {scores file}.txt
 
 ### Optional argument `-m` or `--max` for maximum number of faan (番) (default 8)
 

@@ -6,7 +6,7 @@
 # Parse the Mahjong scores in {scores file}.txt and return a CSV of statistics
 # for full responsibility (全銃), one-n-two bucks (一二文), and half-spicy
 # increase (半辣上) under Kwong-tung (廣東牌) scoring:
-#   mahjong.py {scores file}
+#   mahjong.py {scores file}.txt
 # Optional argument -m or --max for maximum number of faan (番) (default 8):
 #   mahjong.py {...} -m {max faan}
 # Optional argument -s or --start for start date (default 0):
@@ -306,7 +306,7 @@ def file_to_dict(file_name, max_faan, start_date, end_date, num_players):
       raise_exception('does not properly specify a game')
   
   # Import .txt file as string
-  with open(file_name + '.txt', 'r', encoding = 'utf-8') as txt_file:
+  with open(f'{file_name}.txt', 'r', encoding = 'utf-8') as txt_file:
     txt_file_string = txt_file.read()
   
   # Whether the start date has been reached
@@ -406,6 +406,9 @@ def main(args):
   
   # File name
   file_name = args.file_name
+  
+  # Remove trailing "." or ".txt" if provided
+  file_name = re.sub(r'\.(txt)?$', '', file_name)
   
   # Export file name
   file_name_export = file_name
