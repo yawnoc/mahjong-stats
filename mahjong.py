@@ -13,8 +13,6 @@
 #   mahjong.py {...} -s {start date}
 # Optional argument -e or --end for end date (default 10 ** 8):
 #   mahjong.py {...} -e {end date}
-# Optional flag --3p for 3-player scoring:
-#   mahjong.py {...} --3p
 # Released into the public domain (CC0):
 #   https://creativecommons.org/publicdomain/zero/1.0/
 # ABSOLUTELY NO WARRANTY, i.e. "GOD SAVE YOU"
@@ -165,7 +163,7 @@ def list_to_csv_line(list_):
 # Generate dictionary of statistics from plain-text file of Mahjong scores
 ################################################################
 
-def file_to_dict(file_name, max_faan, start_date, end_date, num_players):
+def file_to_dict(file_name, max_faan, start_date, end_date):
   
   ################################################################
   # For raising exceptions
@@ -183,8 +181,9 @@ def file_to_dict(file_name, max_faan, start_date, end_date, num_players):
   space_pattern = r'\s+'
   names_regex = re.compile(
     '^'
-    + (num_players - 1) * (name_pattern + space_pattern)
+    + 2 * (name_pattern + space_pattern)
     + name_pattern
+    + f'(?:{space_pattern + name_pattern})?'
     + '$'
   )
   
@@ -196,8 +195,9 @@ def file_to_dict(file_name, max_faan, start_date, end_date, num_players):
   space_pattern = r'\s+'
   game_regex = re.compile(
     '^'
-    + (num_players - 1) * (spec_pattern + space_pattern)
+    + 2 * (spec_pattern + space_pattern)
     + spec_pattern
+    + f'(?:{space_pattern + spec_pattern})?'
     + '$'
   )
   
@@ -350,6 +350,12 @@ def file_to_dict(file_name, max_faan, start_date, end_date, num_players):
       names_match = names_regex.match(line)
       if names_match:
         
+        # Get number of players
+        if names_match.group(4) is None:
+          num_players = 3
+        else:
+          num_players = 4
+        
         # Set list of players
         player_list = [names_match.group(n) for n in range(1, 1 + num_players)]
         
@@ -371,6 +377,18 @@ def file_to_dict(file_name, max_faan, start_date, end_date, num_players):
         # Players must already have been specified
         if 'player_list' not in locals():
           raise_exception('players must be specified before a game')
+        
+        # Get number of scoring specifications
+        if game_match.group(4) is None:
+          num_specs = 3
+        else:
+          num_specs = 4
+        
+        # Number of scoring specifications must match number of players
+        if num_players != num_specs:
+          raise_exception(
+            f'{num_specs} scores given for {num_players} players'
+          )
         
         # Extract list of scoring specifications
         spec_list = [game_match.group(n) for n in range(1, 1 + num_players)]
@@ -428,20 +446,8 @@ def main(args):
   if end_date != DEFAULT_END_DATE:
     file_name_export += f'-e_{end_date}'
   
-  # Number of players
-  three_player = args.three_player
-  if three_player:
-    num_players = 3
-  else:
-    num_players = 4
-  
   # Generate dictionary of statistics from file
-  stats_dict = file_to_dict(
-    file_name,
-    max_faan,
-    start_date, end_date,
-    num_players
-  )
+  stats_dict = file_to_dict(file_name, max_faan, start_date, end_date)
   
   # Convert into CSV string of statistics
   stats_csv = dict_to_csv(stats_dict)
@@ -492,12 +498,6 @@ if __name__ == '__main__':
     nargs = '?',
     default = DEFAULT_END_DATE,
     type = int
-  )
-  parser.add_argument(
-    '--3p',
-    dest = 'three_player',
-    action = 'store_true',
-    help = 'Flag for 3-player scoring'
   )
   
   # Run
