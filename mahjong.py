@@ -181,7 +181,7 @@ def file_to_dict(file_name, max_faan, start_date, end_date, num_players):
   
   name_pattern = r'([^0-9\s,\-][^\s,\-]*)'
   space_pattern = r'\s+'
-  names_re = re.compile(
+  names_regex = re.compile(
     '^'
     + (num_players - 1) * (name_pattern + space_pattern)
     + name_pattern
@@ -194,7 +194,7 @@ def file_to_dict(file_name, max_faan, start_date, end_date, num_players):
   
   spec_pattern = r'([0-9]+|[dtf\-])'
   space_pattern = r'\s+'
-  game_re = re.compile(
+  game_regex = re.compile(
     '^'
     + (num_players - 1) * (spec_pattern + space_pattern)
     + spec_pattern
@@ -347,7 +347,7 @@ def file_to_dict(file_name, max_faan, start_date, end_date, num_players):
     if start_reached and not end_exceeded:
       
       # If line specifies player names
-      names_match = names_re.match(line)
+      names_match = names_regex.match(line)
       if names_match:
         
         # Set list of players
@@ -365,7 +365,7 @@ def file_to_dict(file_name, max_faan, start_date, end_date, num_players):
         continue
       
       # If line specifies a game
-      game_match = game_re.match(line)
+      game_match = game_regex.match(line)
       if game_match:
         
         # Players must already have been specified
