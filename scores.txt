@@ -1,16 +1,18 @@
 20191214
 
-伯 仲 叔 季
-- - - - # 摸和
-6 - - - # 伯自摸六番
-- 3 d - # 叔出銃三番畀仲
-- - t 8 # 叔包季自摸
-- - f - # 叔食詐糊
+w x y z
+- - - - # Draw
+6 - - - # w self-drawn win, 6 faan
+- 3 d - # y discards, x wins, 3 faan
+- - t 8 # y takes on all losses, z self-drawn win
+- - f - # y false win
 
-# 叔誓不再打牌而賭神替之
+# y swears never to play again and q replaces him
 
-伯 仲 賭神 季
-- - 8 - # 賭神自摸十三么
+w x q z
+- - 8 - # q self-drawn win, 8 faan
+
+# A 3-player game
 
 A B C
-d 3 - # A出銃三番畀B
+d 3 - # A discards, B wins, 3 faan
