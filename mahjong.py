@@ -464,7 +464,7 @@ if __name__ == '__main__':
   # Arguments
   parser.add_argument(
     'file_name',
-    help = 'File name of .txt Mahjong scores without extension'
+    help = 'File name of Mahjong scores (.txt)'
   )
   parser.add_argument(
     '-m',
