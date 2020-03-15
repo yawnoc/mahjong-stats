@@ -22,10 +22,6 @@ increase (半辣上) under Kwong-tung (廣東牌) scoring:
 
     mahjong.py {...} -e {end date}
 
-### Optional flag `--3p` for 3-player scoring:
-
-    mahjong.py {...} --3p
-
 ## Specifications for scores text file
 
 1. Hash (`#`) **comments** out the remainder of a line
@@ -47,7 +43,7 @@ increase (半辣上) under Kwong-tung (廣東牌) scoring:
       5. `-`, otherwise
 5. Any other non-comment non-whitespace text is invalid
 
-Omit `{P4}` and `{S4}` for 3-player scoring.
+3-player games can also be scored; simply omit `{P4}` and `{S4}`.
 
 ## Simple example
 
@@ -66,6 +62,9 @@ Running `mahjong.py scores` for the following [`scores.txt`](scores.txt)
     
     伯 仲 賭神 季
     - - 8 - # 賭神自摸十三么
+    
+    A B C
+    d 3 - # A出銃三番畀B
 
 results in the following output [`scores.csv`](scores.csv):
 
@@ -74,5 +73,8 @@ results in the following output [`scores.csv`](scores.csv):
 | 賭神 | 1 | 1 | 384 | 100 | 384.0 |
 | 季 | 6 | 1 | 320 | 17 | 53.3 |
 | 伯 | 6 | 1 | 192 | 17 | 32.0 |
+| B | 1 | 1 | 24 | 100 | 24.0 |
+| C | 1 | 0 | 0 | 0 | 0.0 |
+| A | 1 | 0 | -24 | 0 | -24.0 |
 | 仲 | 6 | 1 | -32 | 17 | -5.3 |
 | 叔 | 5 | 0 | -864 | 0 | -172.8 |
