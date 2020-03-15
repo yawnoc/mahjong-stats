@@ -51,30 +51,32 @@ Running `mahjong.py scores` for the following [`scores.txt`](scores.txt)
 
     20191214
     
-    伯 仲 叔 季
-    - - - - # 摸和
-    6 - - - # 伯自摸六番
-    - 3 d - # 叔出銃三番畀仲
-    - - t 8 # 叔包季自摸
-    - - f - # 叔食詐糊
+    w x y z
+    - - - - # Draw
+    6 - - - # w self-drawn win, 6 faan
+    - 3 d - # y discards, x wins, 3 faan
+    - - t 8 # y takes on all losses, z self-drawn win
+    - - f - # y false win
     
-    # 叔誓不再打牌而賭神替之
+    # y swears never to play again and q replaces him
     
-    伯 仲 賭神 季
-    - - 8 - # 賭神自摸十三么
+    w x q z
+    - - 8 - # q self-drawn win, 8 faan
+    
+    # A 3-player game
     
     A B C
-    d 3 - # A出銃三番畀B
+    d 3 - # A discards, B wins, 3 faan
 
 results in the following output [`scores.csv`](scores.csv):
 
 | player | games_played | games_won | net_score | games_won_pc | net_score_avg |
 | --- | --- | --- | --- | --- | --- |
-| 賭神 | 1 | 1 | 384 | 100 | 384.0 |
-| 季 | 6 | 1 | 320 | 17 | 53.3 |
-| 伯 | 6 | 1 | 192 | 17 | 32.0 |
+| q | 1 | 1 | 384 | 100 | 384.0 |
+| z | 6 | 1 | 320 | 17 | 53.3 |
+| w | 6 | 1 | 192 | 17 | 32.0 |
 | B | 1 | 1 | 24 | 100 | 24.0 |
 | C | 1 | 0 | 0 | 0 | 0.0 |
 | A | 1 | 0 | -24 | 0 | -24.0 |
-| 仲 | 6 | 1 | -32 | 17 | -5.3 |
-| 叔 | 5 | 0 | -864 | 0 | -172.8 |
+| x | 6 | 1 | -32 | 17 | -5.3 |
+| y | 5 | 0 | -864 | 0 | -172.8 |
