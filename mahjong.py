@@ -1,60 +1,68 @@
 #!/usr/bin/python
 
-################################################################
-# mahjong.py
-################################################################
-# Parse the Mahjong scores in {scores file}.txt and return a CSV of statistics
-# for full responsibility (全銃), one-n-two bucks (一二文), and half-spicy
-# increase (半辣上) under Kwong-tung (廣東牌) scoring:
-#   mahjong.py {scores file}.txt
-# Optional argument -m or --max for maximum number of faan (番) (default 8):
-#   mahjong.py {...} -m {max faan}
-# Optional argument -s or --start for start date (default 0):
-#   mahjong.py {...} -s {start date}
-# Optional argument -e or --end for end date (default 10 ** 8):
-#   mahjong.py {...} -e {end date}
-# Released into the public domain (CC0):
-#   https://creativecommons.org/publicdomain/zero/1.0/
-# ABSOLUTELY NO WARRANTY, i.e. "GOD SAVE YOU"
-################################################################
-# Specifications for plain-text file of Mahjong scores:
-# 1. Hash (#) comments out the remainder of a line
-# 2. Date is specified by a line of digits {yyyymmdd}
-#     2.1 Extra digits are permitted but ignored
-# 3. Players are specified by a line {P1} {P2} {P3} {P4}
-#     3.1 Whitespace can be any non-newline whitespace
-#     3.2 Player names cannot begin with a digit
-#     3.3 Player names cannot contain whitespace
-#     3.4 Player names cannot contain commas
-#     3.5 Player names cannot contain hyphens
-# 4. A game is specified by a line {S1} {S2} {S3} {S4}
-#     4.1 Whitespace can be any non-newline whitespace
-#     4.2 Each {Sn} is either
-#         (1) an integer, the winning number of faan
-#         (2) d, for the discarding player (打出)
-#         (3) t, for taking on all losses for a self-drawn win (包自摸)
-#         (4) f, for a false win (詐糊)
-#         (5) -, otherwise
-# 5. Any other non-comment non-whitespace text is invalid
-################################################################
+"""
+----------------------------------------------------------------
+mahjong.py
+----------------------------------------------------------------
+
+Parse the Mahjong scores in {scores file}.txt and return a CSV of statistics
+for full responsibility (全銃), one-n-two bucks (一二文), and half-spicy
+increase (半辣上) under Kwong-tung (廣東牌) scoring:
+  mahjong.py {scores file}.txt
+
+Optional argument -m or --max for maximum number of faan (番) (default 8):
+  mahjong.py {...} -m {max faan}
+
+Optional argument -s or --start for start date (default 0):
+  mahjong.py {...} -s {start date}
+
+Optional argument -e or --end for end date (default 10 ** 8):
+  mahjong.py {...} -e {end date}
+
+Released into the public domain (CC0):
+  <https://creativecommons.org/publicdomain/zero/1.0/>
+ABSOLUTELY NO WARRANTY, i.e. "GOD SAVE YOU"
+
+Specifications for plain-text file of Mahjong scores:
+
+1. Hash (#) comments out the remainder of a line
+2. Date is specified by a line of digits {yyyymmdd}
+    2.1 Extra digits are permitted but ignored
+3. Players are specified by a line {P1} {P2} {P3} {P4}
+    3.1 Whitespace can be any non-newline whitespace
+    3.2 Player names cannot begin with a digit
+    3.3 Player names cannot contain whitespace
+    3.4 Player names cannot contain commas
+    3.5 Player names cannot contain hyphens
+4. A game is specified by a line {S1} {S2} {S3} {S4}
+    4.1 Whitespace can be any non-newline whitespace
+    4.2 Each {Sn} is either
+        (1) an integer, the winning number of faan
+        (2) d, for the discarding player (打出)
+        (3) t, for taking on all losses for a self-drawn win (包自摸)
+        (4) f, for a false win (詐糊)
+        (5) -, otherwise
+5. Any other non-comment non-whitespace text is invalid
+
+3-player games can also be scored; simply omit {P4} and {S4}.
+"""
 
 from collections import OrderedDict
 import argparse
 import re
 
-################################################################
-# CONSTANTS
-################################################################
+
 
 DEFAULT_MAX_FAAN = 8
 DEFAULT_START_DATE = 0
 DEFAULT_END_DATE = 10 ** 8
 
-################################################################
-# Add player to dictionary of statistics
-################################################################
+
 
 def add_player(stats_dict, player):
+  """
+  Add a player to a dictionary of statistics.
+  """
   
   # If player has no previous record
   if player not in stats_dict:
@@ -62,11 +70,13 @@ def add_player(stats_dict, player):
     # Provide a clean slate of additive statistics
     stats_dict[player] = {stat: 0 for stat in stat_list_additive()}
 
-################################################################
-# Additive statistics and non-additive statistics (rates)
-################################################################
+
 
 def stat_list_additive():
+  """
+  Return list of the additive statistics.
+  """
+  
   return [
     'games_played',
     'games_won',
@@ -74,32 +84,35 @@ def stat_list_additive():
   ]
 
 def stat_list_rates():
+  """
+  Return list of the non-additive statistics (rates).
+  """
+  
   return [
     'games_won_pc',
     'net_score_avg'
   ]
 
-################################################################
-# Base amount for a given number of faan
-################################################################
-
-# Under one-n-two bucks (一二文) and half-spicy increase (半辣上):
-
-# Faan  Amount
-#    0       1
-#    1       2
-#    2       4
-#    3       8
-#    4      16
-#    5      24
-#    6      32
-#    7      48
-#    8      64
-#    9      96
-#   10     128
-# etc. (i.e. doubling up to 4 faan, then midpoint insertions for odd faan)
 
 def base_amount(faan):
+  """
+  Return the base amount for a given number of faan.
+  Under one-n-two bucks (一二文) and half-spicy increase (半辣上):
+    Faan  Amount
+      0       1
+      1       2
+      2       4
+      3       8
+      4      16
+      5      24
+      6      32
+      7      48
+      8      64
+      9      96
+     10     128
+  etc. (i.e. doubling up to 4 faan,
+  then midpoint insertions for odd faan)
+  """
   
   if faan <= 4:
     return 2 ** faan
@@ -110,11 +123,11 @@ def base_amount(faan):
   else:
     return 32 * 2 ** ((faan - 6) // 2)
 
-################################################################
-# Convert dictionary of statistics to CSV string
-################################################################
 
 def dict_to_csv(stats_dict):
+  """
+  Convert a dictionary of statistics to a CSV string.
+  """
   
   # List of all statistics
   stat_list = stat_list_additive() + stat_list_rates()
@@ -151,32 +164,30 @@ def dict_to_csv(stats_dict):
   
   return stats_csv
 
-################################################################
-# Convert list to line of CSV
-################################################################
+
 
 def list_to_csv_line(list_):
+  """
+  Convert a list to a string for a line of a CSV.
+  """
   
   return ','.join(list_) + '\n'
 
-################################################################
-# Generate dictionary of statistics from plain-text file of Mahjong scores
-################################################################
 
 def file_to_dict(file_name, max_faan, start_date, end_date):
+  """
+  Generate a dictionary of stats from a file of Mahjong scores.
+  """
   
-  ################################################################
-  # For raising exceptions
-  ################################################################
   def raise_exception(message):
+    """
+    Raise an exception, noting the current line.
+    """
     raise Exception(
       f'LINE {line_num} OF {file_name}.txt INVALID: {message}'
     )
   
-  ################################################################
   # Regular expression for line specifying player names
-  ################################################################
-  
   name_pattern = r'([^0-9\s,\-][^\s,\-]*)'
   space_pattern = r'\s+'
   names_regex = re.compile(
@@ -187,10 +198,7 @@ def file_to_dict(file_name, max_faan, start_date, end_date):
     + '$'
   )
   
-  ################################################################
   # Regular expression for line specifying a game
-  ################################################################
-  
   spec_pattern = r'([0-9]+|[dtf\-])'
   space_pattern = r'\s+'
   game_regex = re.compile(
@@ -201,20 +209,16 @@ def file_to_dict(file_name, max_faan, start_date, end_date):
     + '$'
   )
   
-  ################################################################
-  # Cap winning number of faan at the maximum
-  ################################################################
-  
   def cap_faan(faan):
-    
+    """
+    Cap the winning number of faan at the maximum
+    """
     return min(max_faan, int(faan))
   
-  ################################################################
-  # Parse a list of scoring specifications into win and net score lists
-  ################################################################
-  
   def parse_spec_list(spec_list, num_players):
-    
+    """
+    Parse a list of scoring specifications into win and net score lists
+    """
     hyphen_count = spec_list.count('-')
     is_integer_list = [spec.isdigit() for spec in spec_list]
     integer_count = is_integer_list.count(True)
@@ -306,7 +310,7 @@ def file_to_dict(file_name, max_faan, start_date, end_date):
       raise_exception('does not properly specify a game')
   
   # Import .txt file as string
-  with open(f'{file_name}.txt', 'r', encoding = 'utf-8') as txt_file:
+  with open(f'{file_name}.txt', 'r', encoding='utf-8') as txt_file:
     txt_file_string = txt_file.read()
   
   # Whether the start date has been reached
@@ -453,7 +457,7 @@ def main(args):
   stats_csv = dict_to_csv(stats_dict)
   
   # Export .csv file
-  with open(file_name_export + '.csv', 'w', encoding = 'utf-8') as csv_file:
+  with open(file_name_export + '.csv', 'w', encoding='utf-8') as csv_file:
     csv_file.write(stats_csv)
 
 ################################################################
@@ -464,40 +468,41 @@ if __name__ == '__main__':
   
   # Description
   parser = argparse.ArgumentParser(
-    description = 'Generates Mahjong statistics'
+    description='Generates Mahjong statistics'
   )
   
   # Arguments
   parser.add_argument(
     'file_name',
-    help = 'File name of Mahjong scores (.txt)'
+    help='File name of Mahjong scores file',
+    metavar='file_name[.[txt]]'
   )
   parser.add_argument(
     '-m',
     '--max',
-    dest = 'max_faan',
-    help = f'Maximum number of faan (default {DEFAULT_MAX_FAAN})',
-    nargs = '?',
-    default = DEFAULT_MAX_FAAN,
-    type = int
+    dest='max_faan',
+    help=f'Maximum number of faan (default {DEFAULT_MAX_FAAN})',
+    nargs='?',
+    default=DEFAULT_MAX_FAAN,
+    type=int
   )
   parser.add_argument(
     '-s',
     '--start',
-    dest = 'start_date',
-    help = f'Start date (default {DEFAULT_START_DATE})',
-    nargs = '?',
-    default = DEFAULT_START_DATE,
-    type = int
+    dest='start_date',
+    help=f'Start date (default {DEFAULT_START_DATE})',
+    nargs='?',
+    default=DEFAULT_START_DATE,
+    type=int
   )
   parser.add_argument(
     '-e',
     '--end',
-    dest = 'end_date',
-    help = f'End date (default {DEFAULT_END_DATE})',
-    nargs = '?',
-    default = DEFAULT_END_DATE,
-    type = int
+    dest='end_date',
+    help=f'End date (default {DEFAULT_END_DATE})',
+    nargs='?',
+    default=DEFAULT_END_DATE,
+    type=int
   )
   
   # Run
