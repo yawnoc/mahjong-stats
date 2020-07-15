@@ -19,10 +19,6 @@ Optional argument -s or --start for start date (default 0):
 Optional argument -e or --end for end date (default 10 ** 8):
   mahjong.py {...} -e {end date}
 
-Released into the public domain (CC0):
-  <https://creativecommons.org/publicdomain/zero/1.0/>
-ABSOLUTELY NO WARRANTY, i.e. "GOD SAVE YOU"
-
 Specifications for plain-text file of Mahjong scores:
 
 1. Hash (#) comments out the remainder of a line
